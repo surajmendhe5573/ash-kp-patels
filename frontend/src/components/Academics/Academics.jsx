@@ -2,7 +2,7 @@ import React from 'react'
 import Events from '../Home/Events'
 import FAQs from '../Home/FAQs'
 import ContactUs from '../Home/ContactUs'
-import ProgramShowcase from './ProgramShowcase'
+import ProgramShowcase from './ProgramShowcase.jsx'
 
 const Academics = () => {
   return (
