@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout Code
+      # 1️⃣ Checkout Repo
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup Node.js 20
+      # 2️⃣ Setup Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -24,36 +24,26 @@ jobs:
       - name: Install Backend Dependencies
         run: |
           cd backend
-          npm install --omit=dev
+          npm install
 
       # 4️⃣ Build Frontend
       - name: Build Frontend
         run: |
           cd frontend
-          npm install --omit=dev
-          npm run build
+          npm install        # include dev dependencies
+          npx vite build      # build using local vite
 
-      # 5️⃣ Upload backend folder to EC2
-      - name: Upload backend to EC2
+      # 5️⃣ Copy only backend & frontend/dist to EC2
+      - name: Copy project files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "backend/**"
-          target: "/var/www/ash-kp-patels/backend"
+          source: "backend/**, frontend/dist/**"
+          target: "/var/www/ash-kp-patels"
 
-      # 6️⃣ Upload frontend/dist to EC2
-      - name: Upload frontend dist to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "frontend/dist/**"
-          target: "/var/www/ash-kp-patels/frontend/dist"
-
-      # 7️⃣ SSH into EC2 and restart services
+      # 6️⃣ SSH into EC2 & restart services
       - name: Restart Services on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -66,12 +56,13 @@ jobs:
             # Backend deploy
             cd /var/www/ash-kp-patels/backend
             npm install --omit=dev
-            pm2 restart backend || pm2 start src/server.js --name backend --env production --update-env
+            pm2 restart backend || pm2 start src/server.js --name backend
 
-            # Ensure frontend folder exists (optional)
+            # Frontend deploy
             mkdir -p /var/www/ash-kp-patels/frontend/dist
+            cp -r /var/www/ash-kp-patels/frontend/dist/* /var/www/ash-kp-patels/frontend/
 
-            # Restart NGINX to serve latest frontend
+            # Restart NGINX
             sudo systemctl reload nginx
 
             echo "🎉 Deployment Completed Successfully!"
