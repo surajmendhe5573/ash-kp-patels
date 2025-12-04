@@ -30,10 +30,10 @@ jobs:
       - name: Build Frontend
         run: |
           cd frontend
-          npm install
-          npm run build
+          npm install        # include dev dependencies
+          npx vite build      # build using local vite
 
-      # 5️⃣ Upload only backend & dist folder to EC2
+      # 5️⃣ Copy only backend & frontend/dist to EC2
       - name: Copy project files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
