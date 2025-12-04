@@ -54,7 +54,7 @@ const Gallery = () => {
 
       <p className="xl:w-[70%] w-[95%] mx-auto font-normal md:text-[24px] text-[20px] text-[#2A4767] text-center mt-5">
         Our nurturing environment encourages every student to think creatively,
-        learn enthusiastically, and grow with confidently.
+        learn enthusiastically, and grow with and confidently.
       </p>
 
 
