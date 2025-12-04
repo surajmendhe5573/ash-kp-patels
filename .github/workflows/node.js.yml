@@ -1,0 +1,74 @@
+name: Deploy Full-Stack App to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout Repo
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2️⃣ Setup Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      # 3️⃣ Install Backend Dependencies
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm install
+
+      # 4️⃣ Build Frontend
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      # 5️⃣ Upload only necessary files to EC2
+      # ❗ Your version was uploading .git folder and node_modules
+      - name: Copy project files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "./backend, ./frontend/dist"
+          target: "/var/www/ash-kp-patels"
+          rm: true
+
+      # 6️⃣ Run SSH commands on EC2
+      - name: Restart Services on EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "🚀 Starting Deployment..."
+
+            cd /var/www/ash-kp-patels
+
+            # Backend
+            cd backend
+            npm install --omit=dev
+            pm2 restart backend || pm2 start src/server.js --name backend
+
+            # Move built frontend to dist folder (nginx root)
+            cd ..
+            rm -rf /var/www/ash-kp-patels/frontend/dist
+            mkdir -p /var/www/ash-kp-patels/frontend/dist
+            cp -r frontend/dist/* /var/www/ash-kp-patels/frontend/dist/
+
+            # Restart NGINX
+            sudo systemctl reload nginx
+
+            echo "🎉 Deployment Completed Successfully!"
