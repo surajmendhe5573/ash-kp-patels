@@ -7,15 +7,14 @@ on:
 
 jobs:
   deploy:
-    name: Deploying to AWS EC2
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout Repo
+      # 1️⃣ Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup Node.js
+      # 2️⃣ Setup Node.js 20
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -25,29 +24,36 @@ jobs:
       - name: Install Backend Dependencies
         run: |
           cd backend
-          npm install
+          npm install --omit=dev
 
       # 4️⃣ Build Frontend
       - name: Build Frontend
         run: |
           cd frontend
-          npm install
+          npm install --omit=dev
           npm run build
 
-      # 5️⃣ Upload ONLY backend + frontend/dist to EC2
-      - name: Upload files to EC2
+      # 5️⃣ Upload backend folder to EC2
+      - name: Upload backend to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: |
-            backend/**
-            frontend/dist/**
-          target: "/var/www/ash-kp-patels"
-          strip_components: 1
+          source: "backend/**"
+          target: "/var/www/ash-kp-patels/backend"
 
-      # 6️⃣ SSH into EC2 & restart backend + copy new frontend
+      # 6️⃣ Upload frontend/dist to EC2
+      - name: Upload frontend dist to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "frontend/dist/**"
+          target: "/var/www/ash-kp-patels/frontend/dist"
+
+      # 7️⃣ SSH into EC2 and restart services
       - name: Restart Services on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -55,29 +61,17 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            echo "🚀 Deployment Started..."
+            echo "🚀 Starting Deployment..."
 
-            # === BACKEND DEPLOY ===
+            # Backend deploy
             cd /var/www/ash-kp-patels/backend
             npm install --omit=dev
-            pm2 restart backend || pm2 start src/server.js --name backend
+            pm2 restart backend || pm2 start src/server.js --name backend --env production --update-env
 
-            # === FRONTEND DEPLOY ===
-            echo "📦 Deploying frontend..."
-
-            # Remove old dist
-            rm -rf /var/www/ash-kp-patels/frontend/dist
-
-            # Create fresh dist folder
+            # Ensure frontend folder exists (optional)
             mkdir -p /var/www/ash-kp-patels/frontend/dist
 
-            # Put NEW frontend dist uploaded from GitHub
-            cp -r /var/www/ash-kp-patels/dist/* /var/www/ash-kp-patels/frontend/dist/
-
-            # Remove temporary folder created by upload
-            rm -rf /var/www/ash-kp-patels/dist
-
-            # Restart NGINX
+            # Restart NGINX to serve latest frontend
             sudo systemctl reload nginx
 
             echo "🎉 Deployment Completed Successfully!"
