@@ -18,8 +18,8 @@
   const mailOptions = {
   from: `"Pruthatek Contact Form" <${process.env.EMAIL_USER}>`,
   replyTo: email, 
-  // to: "surajmendhe32@gmail.com",
-  to: "info@pruthatek.com",
+  to: "surajmendhe32@gmail.com",
+  // to: "info@pruthatek.com",
   subject: "New Contact Form Submission",
   html: `
     <h3>New Contact Form Submission</h3>
