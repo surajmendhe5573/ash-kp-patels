@@ -21,7 +21,7 @@ const fileFilter = (req, file, cb) => {
 const uploadImageKit = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
+  limits: { fileSize: 25 * 1024 * 1024 }, // 20 MB
 }).fields([
   { name: "profilePicture", maxCount: 1 },
   { name: "birthCertificate", maxCount: 1 },
