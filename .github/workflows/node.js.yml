@@ -33,19 +33,17 @@ jobs:
           npm install
           npm run build
 
-      # 5️⃣ Upload only necessary files to EC2
-      # ❗ Your version was uploading .git folder and node_modules
+      # 5️⃣ Upload only backend & dist folder to EC2
       - name: Copy project files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./backend, ./frontend/dist"
+          source: "backend/**, frontend/dist/**"
           target: "/var/www/ash-kp-patels"
-          rm: true
 
-      # 6️⃣ Run SSH commands on EC2
+      # 6️⃣ SSH into EC2 & restart services
       - name: Restart Services on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -55,18 +53,14 @@ jobs:
           script: |
             echo "🚀 Starting Deployment..."
 
-            cd /var/www/ash-kp-patels
-
-            # Backend
-            cd backend
+            # Backend deploy
+            cd /var/www/ash-kp-patels/backend
             npm install --omit=dev
             pm2 restart backend || pm2 start src/server.js --name backend
 
-            # Move built frontend to dist folder (nginx root)
-            cd ..
-            rm -rf /var/www/ash-kp-patels/frontend/dist
+            # Frontend deploy
             mkdir -p /var/www/ash-kp-patels/frontend/dist
-            cp -r frontend/dist/* /var/www/ash-kp-patels/frontend/dist/
+            cp -r /var/www/ash-kp-patels/frontend/dist/* /var/www/ash-kp-patels/frontend/
 
             # Restart NGINX
             sudo systemctl reload nginx
