@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/cicd', (req, res) => {
-     res.send('This is cicd pipeline !');
+     res.send('This is cicd pipeline :)');
 })
 
 app.use('/api/v1/contact-form', contactFormRoute);
