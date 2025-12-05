@@ -30,10 +30,10 @@ jobs:
       - name: Build Frontend
         run: |
           cd frontend
-          npm install        # include dev dependencies
-          npx vite build      # build using local vite
+          npm install
+          npx vite build
 
-      # 5️⃣ Copy only backend & frontend/dist to EC2
+      # 5️⃣ Copy Backend & Frontend Build to EC2
       - name: Copy project files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -43,7 +43,7 @@ jobs:
           source: "backend/**, frontend/dist/**"
           target: "/var/www/ash-kp-patels"
 
-      # 6️⃣ SSH into EC2 & restart services
+      # 6️⃣ Restart Backend + Reload NGINX
       - name: Restart Services on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -53,14 +53,11 @@ jobs:
           script: |
             echo "🚀 Starting Deployment..."
 
-            # Backend deploy
+            # Backend
             cd /var/www/ash-kp-patels/backend
             npm install --omit=dev
             pm2 restart backend || pm2 start src/server.js --name backend
-
-            # Frontend deploy
-            mkdir -p /var/www/ash-kp-patels/frontend/dist
-            cp -r /var/www/ash-kp-patels/frontend/dist/* /var/www/ash-kp-patels/frontend/
+            pm2 save
 
             # Restart NGINX
             sudo systemctl reload nginx
