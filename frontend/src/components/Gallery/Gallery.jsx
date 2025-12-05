@@ -49,7 +49,7 @@ const Gallery = () => {
     <div className="w-full font-poppins py-20 ">
       
         <p className="font-bold md:text-[32px] text-[28px] font-montserrat text-[#F8A813] text-center ">
-          Diwali Festival Celebrations Enjoy.
+          Diwali Festival Celebrations Enjoy !!!
         </p>
 
       <p className="xl:w-[70%] w-[95%] mx-auto font-normal md:text-[24px] text-[20px] text-[#2A4767] text-center mt-5">
