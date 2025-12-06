@@ -40,6 +40,10 @@ app.get('/msg', (req, res) => {
      res.send('This is msg !!!');
 })
 
+app.get('/suraj', (req, res)=>{
+     res.send("Jai Shree Ram");
+})
+
 app.use('/api/v1/contact-form', contactFormRoute);
 app.use('/api/v1/admission-form', admissionFormRoute);
 
